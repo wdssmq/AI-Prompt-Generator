@@ -21,6 +21,7 @@ class PromptGenerator:
         """
         self.items = {}
         self.prompts = {}
+        self.cached_values = {}  # 缓存已生成的变量值
         self.load_config(config_file)
 
     def load_config(self, config_file: str):
@@ -47,6 +48,34 @@ class PromptGenerator:
         except Exception as e:
             print(f"错误：加载配置文件失败 - {e}")
             sys.exit(1)
+
+    def pre_resolve_items(self):
+        """预解析所有items的内容，写入cached_values"""
+        # 多轮解析，先解析简单的，再解析复杂的
+        max_rounds = 3
+        for round_num in range(max_rounds):
+            resolved_this_round = False
+            for item_name, item_content in self.items.items():
+                if item_name not in self.cached_values:
+                    # 检查是否包含复杂语法（条件判断、其他变量引用）
+                    has_complex_syntax = ('{{if(' in item_content or
+                                        ('{{' in item_content and '}}' in item_content and
+                                         not item_content.strip().startswith('{{rnd(')))
+
+                    # 第一轮只解析简单的随机选择和纯文本
+                    if round_num == 0 and has_complex_syntax:
+                        continue
+
+                    try:
+                        # 使用较小的递归深度避免循环
+                        self.cached_values[item_name] = self.generate_text(item_content, max_depth=5)
+                        resolved_this_round = True
+                    except Exception as e:
+                        # 解析失败时使用原始内容
+                        self.cached_values[item_name] = item_content
+
+            if not resolved_this_round:
+                break
 
     def process_random_selection(self, text: str) -> str:
         """处理随机选择语法 {{rnd(选项1,选项2,选项3)}}"""
@@ -94,17 +123,24 @@ class PromptGenerator:
         return re.sub(if_pattern, replace_if, text)
 
     def process_variables(self, text: str) -> str:
-        """处理变量替换 {{variable_name}}"""
+        """处理变量替换 {{variable_name}} 和缓存变量 {{$variable_name}}"""
         var_pattern = r'\{\{([^}]+)\}\}'
 
         def replace_var(match):
             var_name = match.group(1).strip()
+
+            # 处理缓存变量 $variable
+            if var_name.startswith('$'):
+                cache_var_name = var_name[1:]
+                return self.cached_values.get(cache_var_name,
+                       self.items.get(cache_var_name, match.group(0)))
+
+            # 处理普通变量
             if var_name in self.items:
-                # 递归处理变量内容中的其他变量和随机选择
                 return self.generate_text(self.items[var_name])
-            else:
-                print(f"警告：未找到变量 '{var_name}'")
-                return match.group(0)  # 保持原样
+
+            print(f"警告：未找到变量 '{var_name}'")
+            return match.group(0)
 
         return re.sub(var_pattern, replace_var, text)
 
@@ -121,6 +157,10 @@ class PromptGenerator:
         if max_depth <= 0:
             print("警告：达到最大递归深度，可能存在循环引用")
             return template
+
+        # 在最顶层调用时预解析items
+        if max_depth == 10:
+            self.pre_resolve_items()
 
         # 先处理随机选择
         text = self.process_random_selection(template)
