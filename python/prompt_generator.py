@@ -97,10 +97,23 @@ class PromptGenerator:
             false_value = match.group(3).strip()
 
             # 获取变量值
-            if var_name in self.items:
-                # 首先生成变量值并缓存
-                var_value = self.generate_text(self.items[var_name]).strip()
+            var_value = None
 
+            # 处理缓存变量 $variable
+            if var_name.startswith('$'):
+                cache_var_name = var_name[1:]
+                var_value = self.cached_values.get(cache_var_name)
+                if var_value is None:
+                    var_value = self.items.get(cache_var_name)
+
+            # 处理普通变量
+            elif var_name in self.items:
+                var_value = self.items[var_name]
+
+            if var_value is not None:
+                var_value = self.generate_text(var_value).strip()
+
+            if var_value is not None:
                 # 如果变量值为空或空白，返回假值
                 if not var_value:
                     return false_value
