@@ -67,14 +67,17 @@
 # 进入 python 目录
 cd python
 
-# 使用根目录的配置文件（推荐）
-python prompt_generator.py ../config.yaml
+# 安装依赖
+pip install -r requirements.txt
 
-# 或者使用示例配置文件
+# 执行（默认为交互模式）
 python prompt_generator.py ../examples/config.yaml
 
-# 交互模式运行
-python prompt_generator.py ../config.yaml
+# 生成指定提示词
+python prompt_generator.py ../examples/config.yaml -p demo
+
+# 使用自行定义的配置文件，放在根目录下可以被 git 忽略（推荐）
+python prompt_generator.py ../config.yaml [选项]
 
 ```
 
@@ -87,12 +90,12 @@ python prompt_generator.py ../config.yaml
 python prompt_generator.py <配置文件> [选项]
 
 # 参数说明：
-#   配置文件                YAML 配置文件路径
+#   配置文件                 YAML 配置文件路径
 #   -p, --prompt PROMPT     指定要生成的提示词名称
-#   -l, --list             列出所有可用的提示词
-#   -i, --items            列出所有可用的变量
-#   -n, --number NUMBER    生成次数（默认1次）
-#   -h, --help             显示帮助信息
+#   -l, --list              列出所有可用的提示词
+#   -i, --items             列出所有可用的变量
+#   -n, --number NUMBER     生成次数（默认1次）
+#   -h, --help              显示帮助信息
 
 ```
 
