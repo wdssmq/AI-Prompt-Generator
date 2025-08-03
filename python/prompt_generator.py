@@ -243,11 +243,13 @@ def main():
 
         if args.prompt:
             print(f"生成提示词 '{args.prompt}'：")
+            print("")
             for i in range(args.number):
                 if args.number > 1:
                     print(f"\n第 {i+1} 次生成：")
                 result = generator.generate_prompt(args.prompt)
                 print(result)
+                print("")
         else:
             # 交互模式
             print("AI 提示词生成器 - 交互模式")
