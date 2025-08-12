@@ -191,6 +191,8 @@ class PromptGenerator:
             if text != old_text:
                 text = self.generate_text(text, max_depth - 1)
 
+        # 清理多余的逗号分隔
+        text = re.sub(r',\s?,', ',', text)
         return text
 
     def generate_prompt(self, prompt_name: str) -> str:
