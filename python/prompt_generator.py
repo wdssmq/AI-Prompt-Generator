@@ -225,6 +225,7 @@ def main():
     parser.add_argument('-l', '--list', action='store_true', help='列出所有可用的提示词')
     parser.add_argument('-i', '--items', action='store_true', help='列出所有可用的变量')
     parser.add_argument('-n', '--number', type=int, default=1, help='生成次数（默认1次）')
+    parser.add_argument('-r', '--rnd', action='store_true', help='随机排序输出')
 
     args = parser.parse_args()
 
@@ -232,8 +233,11 @@ def main():
         generator = PromptGenerator(args.config)
 
         if args.list:
+            prompts = generator.list_prompts()
+            if args.rnd:
+                random.shuffle(prompts)
             print("可用的提示词：")
-            for prompt in generator.list_prompts():
+            for prompt in prompts:
                 print(f"  - {prompt}")
             return
 

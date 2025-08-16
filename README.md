@@ -94,7 +94,8 @@ python prompt_generator.py <配置文件> [选项]
 #   -p, --prompt PROMPT     指定要生成的提示词名称
 #   -l, --list              列出所有可用的提示词
 #   -i, --items             列出所有可用的变量
-#   -n, --number NUMBER     生成次数（默认1次）
+#   -n, --number NUMBER     生成次数（默认1次），为 -p 的附加选项
+#   -r, --rnd               对列表随机排序输出，为 -l 的附加选项
 #   -h, --help              显示帮助信息
 
 ```
