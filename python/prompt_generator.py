@@ -20,6 +20,7 @@ class PromptGenerator:
             config_file: YAML 配置文件路径
         """
         self.items = {}
+        self.sub_items = {}
         self.prompts = {}
         self.cached_values = {}  # 缓存已生成的变量值
         self.load_config(config_file)
@@ -37,7 +38,14 @@ class PromptGenerator:
 
                 if 'prompts' in section:
                     for prompt in section['prompts']:
-                        self.prompts[prompt['name']] = prompt['content'].strip()
+                        prompt_name = prompt['name']
+                        self.prompts[prompt_name] = prompt['content'].strip()
+                        if 'items' in prompt:
+                            self.sub_items[prompt_name] = {}
+                            for item in prompt['items']:
+                                item_name = item['name']
+                                self.sub_items[prompt_name][item_name] = item['content'].strip()
+
 
         except FileNotFoundError:
             print(f"错误：配置文件 '{config_file}' 不存在")
@@ -206,6 +214,11 @@ class PromptGenerator:
         """
         if prompt_name not in self.prompts:
             raise ValueError(f"未找到提示词 '{prompt_name}'")
+
+        # 如果 sub_items 中存在该提示词的子项，合并到 items 中
+        if prompt_name in self.sub_items:
+            for item_name, item_value in self.sub_items[prompt_name].items():
+                self.items[item_name] = item_value
 
         return self.generate_text(self.prompts[prompt_name])
 
