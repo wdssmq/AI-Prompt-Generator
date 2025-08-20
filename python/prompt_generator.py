@@ -46,11 +46,11 @@ class PromptGenerator:
                             for item in prompt['items']:
                                 item_name = item['name']
                                 self.sub_items[prompt_name][item_name] = item['content'].strip()
-                        # 如果有其他键值对，直接加入 items
+                        # 如果有其他键值对，一并加入 sub_items
                         for key, value in prompt.items():
                             if key != 'name' and key != 'content' and key != 'items':
                                 self.sub_items[prompt_name] = self.sub_items.get(prompt_name, {})
-                                self.items[key] = value.strip()
+                                self.sub_items[prompt_name][key] = value.strip()
 
 
         except FileNotFoundError:
