@@ -71,6 +71,7 @@ class PromptGenerator:
             resolved_this_round = False
             for item_name, item_content in self.items.items():
                 if item_name not in self.cached_values:
+
                     # 检查是否包含复杂语法（条件判断、其他变量引用）
                     has_complex_syntax = ('{{if(' in item_content or
                                         ('{{' in item_content and '}}' in item_content and
@@ -78,6 +79,7 @@ class PromptGenerator:
 
                     # 第一轮只解析简单的随机选择和纯文本
                     if round_num == 0 and has_complex_syntax:
+                        # print(f"跳过复杂语法：{item_name}")
                         continue
 
                     try:
@@ -87,7 +89,6 @@ class PromptGenerator:
                     except Exception as e:
                         # 解析失败时使用原始内容
                         self.cached_values[item_name] = item_content
-
             if not resolved_this_round:
                 break
 
@@ -102,50 +103,47 @@ class PromptGenerator:
         return re.sub(rnd_pattern, replace_rnd, text)
 
     def process_if_conditions(self, text: str) -> str:
-        """处理条件判断语法 {{if(变量):真值:假值}}"""
-        if_pattern = r'\{\{if\(([^)]+)\):([^:]*):([^}]*)\}\}'
+        """处理条件判断语法 {{if(变量 ? 真值 : 假值)}}，空格可选"""
+        if_pattern = r'\{\{if\(([^\?]+)\?([^:]+):([^\)]+)\)\}\}'
 
         def replace_if(match):
-            var_name = match.group(1).strip()
+            condition = match.group(1).strip()
             true_value = match.group(2).strip()
             false_value = match.group(3).strip()
 
             # 获取变量值
-            var_value = None
+            cond_value = cond_var = condition
 
             # 处理缓存变量 $variable
-            if var_name.startswith('$'):
-                cache_var_name = var_name[1:]
-                var_value = self.cached_values.get(cache_var_name)
-                if var_value is None:
-                    var_value = self.items.get(cache_var_name)
+            if cond_var.startswith('$'):
+                cond_var = cond_var[1:]
+                cond_value = self.cached_values.get(cond_var)
+                if cond_value is None:
+                    cond_value = self.items.get(cond_var)
 
             # 处理普通变量
-            elif var_name in self.items:
-                var_value = self.items[var_name]
+            elif cond_var in self.items:
+                cond_value = self.items[cond_var]
 
-            if var_value is not None:
-                var_value = self.generate_text(var_value).strip()
+            if cond_value is not None:
+                cond_value = self.generate_text(cond_value).strip()
 
-            if var_value is not None:
-                # 如果变量值为空或空白，返回假值
-                if not var_value:
-                    return false_value
+            if cond_value is not None:
+                # 如果变量值为空或空白，使用假值
+                if not cond_value:
+                    result = false_value
+                # 否则使用真值
+                else:
+                    result = true_value
 
-                # 如果变量值不为空，处理真值
-                # 在真值中替换同名变量为已生成的值
-                result = true_value
-                if '{{' + var_name + '}}' in result:
-                    result = result.replace('{{' + var_name + '}}', var_value)
-
-                # 处理其他变量
+                # 对于结果中的变量，进行处理
                 if '{{' in result and '}}' in result:
                     result = self.generate_text(result)
 
                 return result
-            else:
-                print(f"警告：条件判断中未找到变量 '{var_name}'")
-                return false_value
+
+            print(f"警告：条件判断中未找到变量 '{cond_var}'")
+            return false_value
 
         return re.sub(if_pattern, replace_if, text)
 
@@ -184,6 +182,7 @@ class PromptGenerator:
         if max_depth <= 0:
             print("警告：达到最大递归深度，可能存在循环引用")
             return template
+        # print(f"递归深度：{max_depth}，处理文本：{template}")
 
         # 在最顶层调用时预解析items
         if max_depth == 10:
@@ -206,7 +205,10 @@ class PromptGenerator:
                 text = self.generate_text(text, max_depth - 1)
 
         # 清理多余的逗号分隔
-        text = re.sub(r',[,\s]+', ',', text)
+        text = re.sub(r',[,\s]+', ', ', text)
+        text = re.sub(r',\s*-1', ', ', text)
+        # 清理首尾逗号和空格
+        text = text.strip(', ')
         return text
 
     def generate_prompt(self, prompt_name: str) -> str:
