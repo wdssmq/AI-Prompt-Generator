@@ -59,35 +59,48 @@
 
 ## 使用方法
 
-### Python 版本
+### 环境及依赖
 
-#### 基本用法
+可能并没有具体 Python 版本要求？
 
 ```bash
-# 进入 python 目录
-cd python
+# 项目根目录下
+python3 -m venv .venv
 
-# 安装依赖
-pip install -r requirements.txt
+# 激活虚拟环境 - Git Bash
+source .venv/Scripts/activate
+
+# 或者用 Windows 命令行
+.venv\Scripts\activate
+
+# 依赖
+pip install -r python/requirements.txt
+
+```
+
+### 基本用法
+
+
+```bash
 
 # 执行（默认为交互模式）
-python prompt_generator.py ../examples/config.yaml
+python python/prompt_generator.py ./examples/config.yaml
 
 # 生成指定提示词
-python prompt_generator.py ../examples/config.yaml -p demo
+python python/prompt_generator.py ./examples/config.yaml -p demo
 
 # 使用自行定义的配置文件，放在根目录下可以被 git 忽略（推荐）
-python prompt_generator.py ../config.yaml [选项]
+python python/prompt_generator.py ./config.yaml [选项]
 
 ```
 
 > **注意：** 用户的实际配置文件通常放在项目根目录下（如 `config.yaml`），这些文件会被 git 忽略，不会被提交到版本库中。`examples/` 目录下的配置文件仅作为参考示例。
 
-#### 命令参数
+### 命令参数
 
 ```bash
 # 基本语法
-python prompt_generator.py <配置文件> [选项]
+python python/prompt_generator.py <配置文件> [选项]
 
 # 参数说明：
 #   配置文件                 YAML 配置文件路径
@@ -100,26 +113,23 @@ python prompt_generator.py <配置文件> [选项]
 
 ```
 
-#### 使用示例
+### 使用示例
 
 ```bash
 # 列出配置文件中所有可用的提示词
-python prompt_generator.py ../config.yaml -l
+python python/prompt_generator.py ./config.yaml -l
 
 # 列出配置文件中所有可用的变量
-python prompt_generator.py ../config.yaml -i
-
-# 生成指定名称的提示词
-python prompt_generator.py ../config.yaml -p demo
+python python/prompt_generator.py ./config.yaml -i
 
 # 生成指定提示词多次
-python prompt_generator.py ../config.yaml -p demo -n 5
+python python/prompt_generator.py ./config.yaml -p demo -n 5
 
 # 交互模式（默认）
-python prompt_generator.py ../config.yaml
+python python/prompt_generator.py ./config.yaml
 
 # 使用示例配置文件
-python prompt_generator.py ../examples/config.yaml -p demo
+python python/prompt_generator.py ./examples/config.yaml -p demo
 
 ```
 
